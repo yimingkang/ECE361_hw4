@@ -65,7 +65,7 @@ public class CCClient {
             writer.write(noPackets);
 
 
-			EstimatedRTT=5000;
+			EstimatedRTT=3000;
 			// EstimatedRTT=1200;
 			DevRTT=0;
 			timeOut = EstimatedRTT+4*DevRTT; //in milliseconds
@@ -98,7 +98,7 @@ public class CCClient {
                             System.out.println("Timeout!");
                             // reset sent
                             sent = lastAck+1;
-                            // reset sshthresh and cwnd
+                            // reset ssthresh and cwnd
                             cwnd = 1;
                             ssthresh /= 2;
                             timeOutOccured = true;
@@ -107,7 +107,10 @@ public class CCClient {
                     }
                     if (!timeOutOccured) {
                         // adjust cwnd size (slow start)
-                        cwnd *= 2;
+                        if (cwnd*2 <= ssthresh)
+                            cwnd *= 2;
+                        else
+                            cwnd++;
                     }
 				}
 			}

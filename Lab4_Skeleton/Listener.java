@@ -15,13 +15,16 @@ public class Listener implements Runnable {
     public void run() {
         System.out.println("Listener object run() method is called!");
         try{ 
-            // BufferedReader socket_reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            DataInputStream readInputStream = new DataInputStream(socket.getInputStream());
+            BufferedReader socket_reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            // DataInputStream readInputStream = new DataInputStream(socket.getInputStream());
 
-            byte[] buffer = new byte[8];
+            // byte[] buffer = new byte[8];
             while(true){
-                readInputStream.read(buffer);
-                int ackNum = (int)(buffer[0]);
+                // readInputStream.read(buffer);
+                // int ackNum = (int)(buffer[0]);
+                int ackNum = socket_reader.read();
+                // System.out.println("BufferedReader gets:" + input);
+                // int ackNum = Integer.parseInt(input);
                 System.out.println("Client receives ack num: " + ackNum);
                 if (ackNum > CCClient.lastAck)
                     CCClient.update(ackNum);
