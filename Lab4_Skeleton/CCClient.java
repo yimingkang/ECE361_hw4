@@ -99,8 +99,8 @@ public class CCClient {
                             // reset sent
                             sent = lastAck+1;
                             // reset ssthresh and cwnd
+                            ssthresh = cwnd/2;
                             cwnd = 1;
-                            ssthresh /= 2;
                             timeOutOccured = true;
                             break;
                         }
