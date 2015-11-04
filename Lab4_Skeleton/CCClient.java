@@ -25,7 +25,7 @@ public class CCClient {
 	public static int lastAck = 0;
 	static int sent = 1;
 	static long[] send_timer;
-	
+
 	static long startTime;
 	static long endTime;
 	public static int EstimatedRTT;
@@ -40,10 +40,10 @@ public class CCClient {
 
 		host="localhost";
 		port=9876;
-		try 
+		try
 		{
             Socket socket = new Socket(host, port);
-			socket.setTcpNoDelay(true); 
+			socket.setTcpNoDelay(true);
 			System.out.println("Connected to : "+ host+ ":"+socket.getPort());
 
 			//reader and writer:
@@ -57,65 +57,58 @@ public class CCClient {
 			//define the thread and start it
             Thread thread = new Thread(new Listener(socket, noPackets));
             thread.start();
-                
-			 
 
-			
+
+
+
 			//send the noPackets to the server
             writer.write(noPackets);
-			
-			
-			EstimatedRTT=1200;
+
+
+			EstimatedRTT=5000;
+			// EstimatedRTT=1200;
 			DevRTT=0;
 			timeOut = EstimatedRTT+4*DevRTT; //in milliseconds
 			lastAck=0;
-			sent=0;
+			sent=1;
 			int cwnd = 1;
 			int ssthresh = 8;
             int second_last_ack = 0;
 			int RTT_count = 0;
+            boolean timeOutOccured = false;
 
 			startTime=System.currentTimeMillis();
 			try {
-				while(sent<noPackets)
+				while(sent<=noPackets)
 				{
-                    if (lastAck != second_last_ack){
-                        // adjust cwnd size (slow start)
-                        int diff = lastAck - second_last_ack;
-                        System.out.println("Got " + diff + " more acks, before=" + cwnd);
-                        while (diff > 0 && cwnd <= ssthresh){
-                            cwnd *= 2;
-                            diff -= 1;
-                        }
-
-                        // adjust cwnd size (avoidance)
-                        cwnd += diff/cwnd;
-                        System.out.println("Adjusted cwnd=" + cwnd);
-
-                        // calculate 'unused' diff' and subtract from lastAck
-                        second_last_ack = lastAck - (diff % cwnd);
-                    }
+                    System.out.println("Current cwnd: " + cwnd);
                     while (sent - lastAck <= cwnd && sent <= noPackets){
                         System.out.println("Client sending packet: " + sent);
                         writer.write(sent);
                         sent +=1;
-                        startTime = System.currentTimeMillis();
                     }
-                    if ((System.currentTimeMillis() - startTime) > timeOut){
-                        System.out.println("Timeout!");
-                        
-                        // reset timer
-                        startTime = System.currentTimeMillis();
-                        
-                        // reset sent
-                        sent = lastAck+1;
-
-                        // reset sshthresh and cwnd
-                        cwnd = 1;
-                        ssthresh /= 2;
+                    startTime = System.currentTimeMillis();
+                    timeOutOccured = false;
+                    // Keep waiting until either: 1) timeout occurs; or 2) lastAck==send
+                    while (lastAck < sent - 1){
+                        // System.out.println("lastAck: " + lastAck+"; sent: "+sent);
+                        Thread.sleep(1);
+                        // Timeout occurs!!!
+                        if ((System.currentTimeMillis() - startTime) > timeOut) {
+                            System.out.println("Timeout!");
+                            // reset sent
+                            sent = lastAck+1;
+                            // reset sshthresh and cwnd
+                            cwnd = 1;
+                            ssthresh /= 2;
+                            timeOutOccured = true;
+                            break;
+                        }
                     }
-					//THE MAIN PART OF THE CODE!
-					//send the packets with congestion control using the given instructions
+                    if (!timeOutOccured) {
+                        // adjust cwnd size (slow start)
+                        cwnd *= 2;
+                    }
 				}
 			}
 			catch (Exception e) {
@@ -125,16 +118,14 @@ public class CCClient {
 				endTime = System.currentTimeMillis();
 				totalTime = endTime - startTime;
 			}
-			
-			
-			//print the total taken time, number of sucessfully sent packets, etc. 
+
+
+			//print the total taken time, number of sucessfully sent packets, etc.
 			//...
-			
-			writer.flush();
+
+			// writer.flush();
 			socket.close();
 			System.out.println("Quitting...");
-			socket.close();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -143,7 +134,7 @@ public class CCClient {
 
 	public static void update(int ackNum)
 	{
-		//update lastAck here. note that last ack is accumulative, 
+		//update lastAck here. note that last ack is accumulative,
 		//i.e., if ack for packet 10 is previously received and now ack for packet 7 is received, lastAck will remain 10
         System.out.println("Setting ack to " + ackNum);
         CCClient.lastAck = ackNum;

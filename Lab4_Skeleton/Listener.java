@@ -18,12 +18,13 @@ public class Listener implements Runnable {
             // BufferedReader socket_reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             DataInputStream readInputStream = new DataInputStream(socket.getInputStream());
 
+            byte[] buffer = new byte[8];
             while(true){
-                byte[] buffer = new byte[8];
                 readInputStream.read(buffer);
                 int ackNum = (int)(buffer[0]);
-                System.out.println("Client is setting ack to " + ackNum);
-                CCClient.update(ackNum);
+                System.out.println("Client receives ack num: " + ackNum);
+                if (ackNum > CCClient.lastAck)
+                    CCClient.update(ackNum);
                 if (ackNum == nPack)
                     break;
             }
