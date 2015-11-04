@@ -4,11 +4,13 @@ import java.io.*;
 public class Listener implements Runnable {
     private Socket socket;
     private int nPack;
+    private int[] ackArray;
 
     public Listener (Socket s, int n){
         System.out.println("Listener object is created!");
         socket = s; 
         nPack = n;
+        ackArray = new int[n + 1];
     }
 
     @Override 
@@ -23,11 +25,23 @@ public class Listener implements Runnable {
                 // readInputStream.read(buffer);
                 // int ackNum = (int)(buffer[0]);
                 int ackNum = socket_reader.read();
+                System.out.println("Client got ack: " + ackNum);
+                ackArray[ackNum] = 1;
+                if(ackNum != CCClient.lastAck + 1){
+                    continue;
+                }
+                while (ackNum <= nPack){
+                    // find the next unfilled hole
+                    if(ackArray[ackNum] != 1){
+                        ackNum--;
+                        break;
+                    }
+                    ackNum++;
+                }
                 // System.out.println("BufferedReader gets:" + input);
                 // int ackNum = Integer.parseInt(input);
-                System.out.println("Client receives ack num: " + ackNum);
-                if (ackNum > CCClient.lastAck)
-                    CCClient.update(ackNum);
+                System.out.println("Client setting ack num to: " + ackNum);
+                CCClient.update(ackNum);
                 if (ackNum == nPack)
                     break;
             }
