@@ -36,11 +36,15 @@ public class Listener implements Runnable {
                         ackNum--;
                         break;
                     }
-                    ackNum++;
+                    if (ackNum != nPack){
+                        ackNum++;
+                    } else {
+                        break;
+                    }
                 }
                 // System.out.println("BufferedReader gets:" + input);
                 // int ackNum = Integer.parseInt(input);
-                System.out.println("Client setting ack num to: " + ackNum);
+                System.out.println("Client updating ack num to: " + ackNum);
                 CCClient.update(ackNum);
                 if (ackNum == nPack)
                     break;

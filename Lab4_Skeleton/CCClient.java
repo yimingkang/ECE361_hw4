@@ -84,7 +84,7 @@ public class CCClient {
                     System.out.println("Current cwnd: " + cwnd);
                     while (sent - lastAck <= cwnd && sent <= noPackets){
                         send_segment = 1;
-                        System.out.println("Client sending packet: " + sent);
+                        System.out.println(nRTT + " !!Client sending packet: " + sent);
                         writer.write(sent);
                         sent +=1;
                     }
@@ -149,7 +149,6 @@ public class CCClient {
 	{
 		//update lastAck here. note that last ack is accumulative,
 		//i.e., if ack for packet 10 is previously received and now ack for packet 7 is received, lastAck will remain 10
-        System.out.println("Setting ack to " + ackNum);
         CCClient.lastAck = ackNum;
 	}
 
