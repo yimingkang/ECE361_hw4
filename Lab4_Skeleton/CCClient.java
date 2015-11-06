@@ -58,24 +58,24 @@ public class CCClient {
             Thread thread = new Thread(new Listener(socket, noPackets));
             thread.start();
 
-
-
-
 			//send the noPackets to the server
             writer.write(noPackets);
 
 
-			EstimatedRTT=3000;
+			EstimatedRTT=1000;
 			// EstimatedRTT=1200;
-			DevRTT=0;
-			timeOut = EstimatedRTT+4*DevRTT; //in milliseconds
+			DevRTT=100;
+			timeOut = EstimatedRTT+4*DevRTT;//in milliseconds
 			lastAck=0;
 			sent=1;
 			int cwnd = 1;
-			int ssthresh = 8;
+			int ssthresh = 16;
             int second_last_ack = 0;
 			int RTT_count = 0;
             boolean timeOutOccured = false;
+            int nRTT = 0;
+            int send_segment = 0;
+            long begin = System.currentTimeMillis();
 
 			startTime=System.currentTimeMillis();
 			try {
@@ -83,10 +83,13 @@ public class CCClient {
 				{
                     System.out.println("Current cwnd: " + cwnd);
                     while (sent - lastAck <= cwnd && sent <= noPackets){
+                        send_segment = 1;
                         System.out.println("Client sending packet: " + sent);
                         writer.write(sent);
                         sent +=1;
                     }
+                    nRTT += send_segment;
+                    send_segment = 0;
                     startTime = System.currentTimeMillis();
                     timeOutOccured = false;
                     // Keep waiting until either: 1) timeout occurs; or 2) lastAck==send
@@ -128,6 +131,13 @@ public class CCClient {
 
 			// writer.flush();
 			socket.close();
+            long transmission_time = System.currentTimeMillis() - begin;
+            System.out.println("***** STATISTICS *****");
+            System.out.println("Assume RTT=" + EstimatedRTT + "ms");
+            System.out.println("Assume Timeout=" + timeOut + "ms");
+            System.out.println("Operation took " + transmission_time/1000.0 + "s");
+            System.out.println("Estimated #RTT is " + nRTT + " if overhead is ignored");
+            System.out.println("Actual #RTT is " + 1.0 * transmission_time/EstimatedRTT);
 			System.out.println("Quitting...");
 		} catch (Exception e) {
 			e.printStackTrace();
